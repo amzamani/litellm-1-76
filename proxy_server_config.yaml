@@ -153,8 +153,6 @@ litellm_settings:
   # max_budget: 100 
   # budget_duration: 30d
   store_model_in_db: true
-  store_prompts_in_spend_logs: true
-  store_request_data: True
   store_response_data: True
   num_retries: 5
   request_timeout: 600
@@ -164,14 +162,15 @@ litellm_settings:
     - team_id: team-1
       success_callback: ["langfuse"]
       failure_callback: ["langfuse"]
-      langfuse_public_key: os.environ/LANGFUSE_PROJECT1_PUBLIC # Project 1
-      langfuse_secret: os.environ/LANGFUSE_PROJECT1_SECRET # Project 1
+      langfuse_public_key: pk-lf-bffbe69c-ac3f-43d7-93af-057c832da926
+      langfuse_secret: sk-lf-b420c9a7-e3e0-4a2d-a8e2-dba0337d907b
+      langfuse_host: https://cloud.langfuse.com
     - team_id: team-2
       success_callback: ["langfuse"]
       failure_callback: ["langfuse"]
-      langfuse_public_key: os.environ/LANGFUSE_PROJECT2_PUBLIC # Project 2
-      langfuse_secret: os.environ/LANGFUSE_PROJECT2_SECRET # Project 2
-      langfuse_host: https://us.cloud.langfuse.com
+      langfuse_public_key: pk-lf-bffbe69c-ac3f-43d7-93af-057c832da926
+      langfuse_secret: sk-lf-b420c9a7-e3e0-4a2d-a8e2-dba0337d907b
+      langfuse_host: https://cloud.langfuse.com
 
 # For /fine_tuning/jobs endpoints
 finetune_settings:
