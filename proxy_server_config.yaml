@@ -152,6 +152,10 @@ litellm_settings:
   drop_params: True
   # max_budget: 100 
   # budget_duration: 30d
+  store_model_in_db: true
+  store_prompts_in_spend_logs: true
+  store_request_data: True
+  store_response_data: True
   num_retries: 5
   request_timeout: 600
   telemetry: False
