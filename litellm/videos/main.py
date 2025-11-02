@@ -161,6 +161,9 @@ def video_generation(  # noqa: PLR0915
     size: Optional[str] = None,
     user: Optional[str] = None,
     timeout=600,  # default to 10 minutes
+    api_key: Optional[str] = None,
+    api_base: Optional[str] = None,
+    api_version: Optional[str] = None,
     custom_llm_provider=None,
     # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
     # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -193,7 +196,23 @@ def video_generation(  # noqa: PLR0915
             return response
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        # Include explicit parameters in litellm_params
+        litellm_params = GenericLiteLLMParams(
+            api_key=api_key,
+            api_base=api_base,
+            api_version=api_version,
+            **kwargs
+        )
+
+        # DEBUG: Print what we received
+        print(f"[DEBUG video_generation] Received kwargs keys: {list(kwargs.keys())}")
+        print(f"[DEBUG video_generation] api_key parameter: {api_key}")
+        print(f"[DEBUG video_generation] api_base parameter: {api_base}")
+        print(f"[DEBUG video_generation] api_version parameter: {api_version}")
+        print(f"[DEBUG video_generation] litellm_params.api_key: {litellm_params.api_key}")
+        print(f"[DEBUG video_generation] litellm_params.api_base: {litellm_params.api_base}")
+        print(f"[DEBUG video_generation] litellm_params.api_version: {litellm_params.api_version}")
+
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
@@ -244,6 +263,7 @@ def video_generation(  # noqa: PLR0915
         return base_llm_http_handler.video_generation_handler(
             model=model,
             prompt=prompt,
+            api_key=api_key,
             video_generation_provider_config=video_generation_provider_config,
             video_generation_optional_request_params=video_generation_request_params,
             custom_llm_provider=custom_llm_provider,
@@ -270,7 +290,9 @@ def video_generation(  # noqa: PLR0915
 def video_content(
     video_id: str,
     model: Optional[str] = None,
+    api_key: Optional[str] = None,
     api_base: Optional[str] = None,
+    api_version: Optional[str] = None,
     timeout: Optional[float] = None,
     custom_llm_provider: Optional[str] = None,
     # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -363,6 +385,7 @@ def video_content(
         return base_llm_http_handler.video_content_handler(
             video_id=video_id,
             model=model,
+            api_key=api_key,
             video_content_provider_config=video_provider_config,
             custom_llm_provider=custom_llm_provider,
             litellm_params=litellm_params,
@@ -582,6 +605,9 @@ def video_remix(  # noqa: PLR0915
     prompt: str,
     model: Optional[str] = None,
     timeout=600,  # default to 10 minutes
+    api_key: Optional[str] = None,
+    api_base: Optional[str] = None,
+    api_version: Optional[str] = None,
     custom_llm_provider=None,
     # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
     # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -658,6 +684,7 @@ def video_remix(  # noqa: PLR0915
             video_id=video_id,
             prompt=prompt,
             model=model,
+            api_key=api_key,
             video_remix_provider_config=video_remix_provider_config,
             custom_llm_provider=custom_llm_provider,
             litellm_params=litellm_params,
@@ -806,6 +833,9 @@ def video_list(  # noqa: PLR0915
     order: Optional[str] = None,
     model: Optional[str] = None,
     timeout=600,  # default to 10 minutes
+    api_key: Optional[str] = None,
+    api_base: Optional[str] = None,
+    api_version: Optional[str] = None,
     custom_llm_provider=None,
     # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
     # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -882,6 +912,7 @@ def video_list(  # noqa: PLR0915
             limit=limit,
             order=order,
             model=model,
+            api_key=api_key,
             video_list_provider_config=video_list_provider_config,
             custom_llm_provider=custom_llm_provider,
             litellm_params=litellm_params,
@@ -1018,6 +1049,9 @@ def video_status(  # noqa: PLR0915
     video_id: str,
     model: Optional[str] = None,
     timeout=600,  # default to 10 minutes
+    api_key: Optional[str] = None,
+    api_base: Optional[str] = None,
+    api_version: Optional[str] = None,
     custom_llm_provider=None,
     # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
     # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -1116,6 +1150,7 @@ def video_status(  # noqa: PLR0915
         return base_llm_http_handler.video_status_handler(
             video_id=video_id,
             model=model,
+            api_key=api_key,
             video_status_provider_config=video_status_provider_config,
             custom_llm_provider=custom_llm_provider,
             litellm_params=litellm_params,

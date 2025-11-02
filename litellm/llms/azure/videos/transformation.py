@@ -4,6 +4,7 @@ from litellm.types.videos.main import VideoCreateOptionalRequestParams
 from litellm.secret_managers.main import get_secret_str
 from litellm.llms.azure.common_utils import BaseAzureLLM
 from litellm.llms.openai.videos.transformation import OpenAIVideoConfig
+from litellm.types.router import GenericLiteLLMParams
 import litellm
 if TYPE_CHECKING:
     from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
@@ -68,7 +69,8 @@ class AzureVideoConfig(OpenAIVideoConfig):
                 resolved_headers["api-key"] = api_key
 
         resolved_headers = BaseAzureLLM._base_validate_azure_environment(
-            headers=resolved_headers, litellm_params=None
+            headers=resolved_headers,
+            litellm_params=GenericLiteLLMParams(api_key=api_key) if api_key else None
         )
 
         supplied_auth = str(resolved_headers.get("Authorization", "") or "").strip()

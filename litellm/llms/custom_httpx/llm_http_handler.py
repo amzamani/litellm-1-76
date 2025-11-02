@@ -19,7 +19,7 @@ import litellm
 import litellm.litellm_core_utils
 import litellm.types
 import litellm.types.utils
-from litellm._logging import verbose_logger, verbose_proxy_logger
+from litellm._logging import verbose_logger
 from litellm.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
 from litellm.litellm_core_utils.realtime_streaming import RealTimeStreaming
 from litellm.llms.base_llm.anthropic_messages.transformation import (
@@ -3487,9 +3487,6 @@ class BaseLLMHTTPHandler:
         if request_info:
             sanitized_request = self._sanitize_request_info(request_info)
             verbose_logger.error(
-                f"LLM provider request failed. Request Context: {sanitized_request}. Error: {repr(e)}"
-            )
-            verbose_proxy_logger.error(
                 f"LLM provider request failed. Request Context: {sanitized_request}. Error: {repr(e)}"
             )
 
