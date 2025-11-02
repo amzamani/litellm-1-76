@@ -19,7 +19,7 @@ import litellm
 import litellm.litellm_core_utils
 import litellm.types
 import litellm.types.utils
-from litellm._logging import verbose_logger
+from litellm._logging import verbose_logger, verbose_proxy_logger
 from litellm.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
 from litellm.litellm_core_utils.realtime_streaming import RealTimeStreaming
 from litellm.llms.base_llm.anthropic_messages.transformation import (
@@ -3482,7 +3482,17 @@ class BaseLLMHTTPHandler:
             BaseTextToSpeechConfig,
             "BasePassthroughConfig",
         ],
+        request_info: Optional[Dict[str, Any]] = None,
     ):
+        if request_info:
+            sanitized_request = self._sanitize_request_info(request_info)
+            verbose_logger.error(
+                f"LLM provider request failed. Request Context: {sanitized_request}. Error: {repr(e)}"
+            )
+            verbose_proxy_logger.error(
+                f"LLM provider request failed. Request Context: {sanitized_request}. Error: {repr(e)}"
+            )
+
         status_code = getattr(e, "status_code", 500)
         error_headers = getattr(e, "headers", None)
         if isinstance(e, httpx.HTTPStatusError):
@@ -3514,6 +3524,13 @@ class BaseLLMHTTPHandler:
             status_code=status_code,
             headers=error_headers,
         )
+
+    @staticmethod
+    def _sanitize_request_info(request_info: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Return the request info exactly as received (no redaction).
+        """
+        return dict(request_info)
 
     async def async_realtime(
         self,
@@ -4071,6 +4088,19 @@ class BaseLLMHTTPHandler:
             },
         )
 
+        request_context: Dict[str, Any] = {
+            "method": "POST",
+            "url": api_base,
+            "headers": dict(headers),
+            "payload": data,
+            "has_files": bool(files),
+        }
+        if files:
+            try:
+                request_context["files"] = [file_field for file_field, _ in files]
+            except Exception:
+                request_context["files"] = "unable to serialize file metadata"
+
         try:
             # Use JSON when no files, otherwise use form data with files
             if files and len(files) > 0:
@@ -4096,6 +4126,7 @@ class BaseLLMHTTPHandler:
             raise self._handle_error(
                 e=e,
                 provider_config=video_generation_provider_config,
+                request_info=request_context,
             )
 
         return video_generation_provider_config.transform_video_create_response(
@@ -4168,6 +4199,19 @@ class BaseLLMHTTPHandler:
             },
         )
 
+        request_context: Dict[str, Any] = {
+            "method": "POST",
+            "url": api_base,
+            "headers": dict(headers),
+            "payload": data,
+            "has_files": bool(files),
+        }
+        if files:
+            try:
+                request_context["files"] = [file_field for file_field, _ in files]
+            except Exception:
+                request_context["files"] = "unable to serialize file metadata"
+
         try:
             # Use JSON when no files, otherwise use form data with files
             if files is None or len(files) == 0:
@@ -4190,6 +4234,7 @@ class BaseLLMHTTPHandler:
             raise self._handle_error(
                 e=e,
                 provider_config=video_generation_provider_config,
+                request_info=request_context,
             )
 
         return video_generation_provider_config.transform_video_create_response(

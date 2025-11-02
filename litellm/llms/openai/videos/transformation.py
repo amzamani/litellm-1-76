@@ -21,9 +21,9 @@ if TYPE_CHECKING:
     BaseVideoConfig = _BaseVideoConfig
     BaseLLMException = _BaseLLMException
 else:
-    LiteLLMLoggingObj = Any
-    BaseVideoConfig = Any
-    BaseLLMException = Any
+    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from litellm.llms.base_llm.videos.transformation import BaseVideoConfig
+    from litellm.llms.base_llm.chat.transformation import BaseLLMException
 
 
 class OpenAIVideoConfig(BaseVideoConfig):

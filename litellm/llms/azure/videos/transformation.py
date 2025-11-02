@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from litellm.types.videos.main import VideoCreateOptionalRequestParams
 from litellm.secret_managers.main import get_secret_str
 from litellm.llms.azure.common_utils import BaseAzureLLM
-import litellm
 from litellm.llms.openai.videos.transformation import OpenAIVideoConfig
+import litellm
 if TYPE_CHECKING:
     from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
 
@@ -57,20 +57,54 @@ class AzureVideoConfig(OpenAIVideoConfig):
         model: str,
         api_key: Optional[str] = None,
     ) -> dict:
-        api_key = (
-            api_key
-            or litellm.api_key
+        resolved_headers: Dict[str, Any] = dict(headers or {})
+        bearer_value: Optional[str] = None
+
+        if api_key:
+            api_key = api_key.strip()
+            if api_key.startswith("Bearer "):
+                resolved_headers["Authorization"] = api_key
+            else:
+                resolved_headers["api-key"] = api_key
+
+        resolved_headers = BaseAzureLLM._base_validate_azure_environment(
+            headers=resolved_headers, litellm_params=None
+        )
+
+        supplied_auth = str(resolved_headers.get("Authorization", "") or "").strip()
+        if supplied_auth:
+            bearer_value = (
+                supplied_auth
+                if supplied_auth.startswith("Bearer ")
+                else f"Bearer {supplied_auth}"
+            )
+
+        candidate_key = (
+            resolved_headers.get("api-key")
+            or (bearer_value.split(" ", 1)[1].strip() if bearer_value and bearer_value.startswith("Bearer ") else None)
             or litellm.azure_key
+            or litellm.api_key
             or get_secret_str("AZURE_OPENAI_API_KEY")
             or get_secret_str("AZURE_API_KEY")
         )
 
-        headers.update(
-            {
-                "Authorization": f"Bearer {api_key}",
-            }
-        )
-        return headers
+        if candidate_key:
+            candidate_key = candidate_key.strip()
+            if candidate_key.startswith("Bearer "):
+                bearer_value = candidate_key
+                sanitized_key = candidate_key.split(" ", 1)[1].strip()
+                resolved_headers["api-key"] = sanitized_key
+            else:
+                resolved_headers["api-key"] = candidate_key
+                if bearer_value is None:
+                    bearer_value = f"Bearer {candidate_key}"
+
+        if bearer_value:
+            if not bearer_value.startswith("Bearer "):
+                bearer_value = f"Bearer {bearer_value}"
+            resolved_headers["Authorization"] = bearer_value
+
+        return resolved_headers
 
     def get_complete_url(
         self,
