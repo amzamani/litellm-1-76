@@ -116,16 +116,19 @@ async def video_list(
     request: Request,
     fastapi_response: Response,
     user_api_key_dict: UserAPIKeyAuth = Depends(user_api_key_auth),
+    model: Optional[str] = None,
 ):
     """
     Video list endpoint for retrieving a list of videos.
-    
+
     Follows the OpenAI Videos API spec:
     https://platform.openai.com/docs/api-reference/videos
-    
+
+    Requires model parameter to look up API credentials from database.
+
     Example:
     ```bash
-    curl -X GET "http://localhost:4000/v1/videos" \
+    curl -X GET "http://localhost:4000/v1/videos?model=sora-2" \
         -H "Authorization: Bearer sk-1234"
     ```
     """
@@ -145,7 +148,16 @@ async def video_list(
 
     # Read query parameters
     query_params = dict(request.query_params)
-    data = {"query_params": query_params}
+
+    # Extract model from query params or function parameter
+    model_name = model or query_params.get("model")
+
+    # IMPORTANT: Put model in root of data dict so router can find deployment config
+    # Router looks for data["model"], not query_params["model"]
+    data = {
+        "query_params": query_params,
+        "model": model_name  # Must be in root for router to extract Azure credentials
+    }
 
     # Process request using ProxyBaseLLMRequestProcessing
     processor = ProxyBaseLLMRequestProcessing(data=data)
@@ -160,7 +172,7 @@ async def video_list(
             general_settings=general_settings,
             proxy_config=proxy_config,
             select_data_generator=select_data_generator,
-            model=None,
+            model=model_name,
             user_model=user_model,
             user_temperature=user_temperature,
             user_request_timeout=user_request_timeout,
@@ -194,16 +206,19 @@ async def video_status(
     request: Request,
     fastapi_response: Response,
     user_api_key_dict: UserAPIKeyAuth = Depends(user_api_key_auth),
+    model: Optional[str] = None,
 ):
     """
     Video status endpoint for retrieving video status and metadata.
-    
+
     Follows the OpenAI Videos API spec:
     https://platform.openai.com/docs/api-reference/videos
-    
+
+    Requires model parameter to look up API credentials from database.
+
     Example:
     ```bash
-    curl -X GET "http://localhost:4000/v1/videos/video_123" \
+    curl -X GET "http://localhost:4000/v1/videos/video_123?model=sora-2" \
         -H "Authorization: Bearer sk-1234"
     ```
     """
@@ -221,8 +236,17 @@ async def video_status(
         version,
     )
 
-    # Create data with video_id
-    data = {"video_id": video_id}
+    # Read query parameters
+    query_params = dict(request.query_params)
+
+    # Extract model from query params or function parameter
+    model_name = model or query_params.get("model")
+
+    # Create data with video_id and model
+    data = {
+        "video_id": video_id,
+        "model": model_name  # Must be in root for router to extract Azure credentials
+    }
 
     # Process request using ProxyBaseLLMRequestProcessing
     processor = ProxyBaseLLMRequestProcessing(data=data)
@@ -237,7 +261,7 @@ async def video_status(
             general_settings=general_settings,
             proxy_config=proxy_config,
             select_data_generator=select_data_generator,
-            model=None,
+            model=model_name,
             user_model=user_model,
             user_temperature=user_temperature,
             user_request_timeout=user_request_timeout,
@@ -271,16 +295,19 @@ async def video_content(
     request: Request,
     fastapi_response: Response,
     user_api_key_dict: UserAPIKeyAuth = Depends(user_api_key_auth),
+    model: Optional[str] = None,
 ):
     """
     Video content endpoint for downloading video content.
-    
+
     Follows the OpenAI Videos API spec:
     https://platform.openai.com/docs/api-reference/videos
-    
+
+    Requires model parameter to look up API credentials from database.
+
     Example:
     ```bash
-    curl -X GET "http://localhost:4000/v1/videos/video_123/content" \
+    curl -X GET "http://localhost:4000/v1/videos/video_123/content?model=sora-2" \
         -H "Authorization: Bearer sk-1234" \
         --output video.mp4
     ```
@@ -299,8 +326,17 @@ async def video_content(
         version,
     )
 
-    # Create data with video_id
-    data = {"video_id": video_id}
+    # Read query parameters
+    query_params = dict(request.query_params)
+
+    # Extract model from query params or function parameter
+    model_name = model or query_params.get("model")
+
+    # Create data with video_id and model
+    data = {
+        "video_id": video_id,
+        "model": model_name  # Must be in root for router to extract Azure credentials
+    }
 
     # Process request using ProxyBaseLLMRequestProcessing
     processor = ProxyBaseLLMRequestProcessing(data=data)
@@ -316,7 +352,7 @@ async def video_content(
             general_settings=general_settings,
             proxy_config=proxy_config,
             select_data_generator=select_data_generator,
-            model=None,
+            model=model_name,
             user_model=user_model,
             user_temperature=user_temperature,
             user_request_timeout=user_request_timeout,

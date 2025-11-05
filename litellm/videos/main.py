@@ -866,7 +866,23 @@ def video_list(  # noqa: PLR0915
             return [VideoObject(**item) for item in mock_response]
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        # Include explicit parameters in litellm_params (same as video_generation)
+        litellm_params = GenericLiteLLMParams(
+            api_key=api_key,
+            api_base=api_base,
+            api_version=api_version,
+            **kwargs
+        )
+
+        # DEBUG: Print what we received
+        print(f"[DEBUG video_list] Received kwargs keys: {list(kwargs.keys())}")
+        print(f"[DEBUG video_list] api_key parameter: {api_key}")
+        print(f"[DEBUG video_list] api_base parameter: {api_base}")
+        print(f"[DEBUG video_list] api_version parameter: {api_version}")
+        print(f"[DEBUG video_list] litellm_params.api_key: {litellm_params.api_key}")
+        print(f"[DEBUG video_list] litellm_params.api_base: {litellm_params.api_base}")
+        print(f"[DEBUG video_list] litellm_params.api_version: {litellm_params.api_version}")
+
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
