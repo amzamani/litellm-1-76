@@ -142,9 +142,18 @@ class OpenAIVideoConfig(BaseVideoConfig):
         Transform the OpenAI video creation response.
         """
         response_data = raw_response.json()
-        
+
+        # Check if response is an error
+        error_message = self._extract_error_message(response_data)
+        if error_message is not None:
+            raise self.get_error_class(
+                error_message=error_message,
+                status_code=raw_response.status_code,
+                headers=raw_response.headers,
+            )
+
         # Transform the response data
-    
+
         video_obj = VideoObject(**response_data)  # type: ignore[arg-type]
         
         # Create usage object with duration information for cost calculation
@@ -222,6 +231,22 @@ class OpenAIVideoConfig(BaseVideoConfig):
         Transform the OpenAI video content download response.
         Returns raw video content as bytes.
         """
+        # Check if response is an error (in case Azure returns JSON error instead of video bytes)
+        content_type = raw_response.headers.get("content-type", "")
+        if "application/json" in content_type:
+            try:
+                response_data = raw_response.json()
+                error_message = self._extract_error_message(response_data)
+                if error_message is not None:
+                    raise self.get_error_class(
+                        error_message=error_message,
+                        status_code=raw_response.status_code,
+                        headers=raw_response.headers,
+                    )
+            except Exception:
+                # If JSON parsing fails, continue to return raw content
+                pass
+
         # For video content download, return the raw content as bytes
         return raw_response.content
 
@@ -235,7 +260,16 @@ class OpenAIVideoConfig(BaseVideoConfig):
         Transform the OpenAI video remix response.
         """
         response_data = raw_response.json()
-        
+
+        # Check if response is an error
+        error_message = self._extract_error_message(response_data)
+        if error_message is not None:
+            raise self.get_error_class(
+                error_message=error_message,
+                status_code=raw_response.status_code,
+                headers=raw_response.headers,
+            )
+
         # Transform the response data
         video_obj = VideoObject(**response_data)  # type: ignore[arg-type]
         
@@ -294,7 +328,18 @@ class OpenAIVideoConfig(BaseVideoConfig):
         raw_response: httpx.Response,
         logging_obj: LiteLLMLoggingObj,
     ) -> Dict[str,str]:
-        return raw_response.json()
+        response_data = raw_response.json()
+
+        # Check if response is an error
+        error_message = self._extract_error_message(response_data)
+        if error_message is not None:
+            raise self.get_error_class(
+                error_message=error_message,
+                status_code=raw_response.status_code,
+                headers=raw_response.headers,
+            )
+
+        return response_data
 
     def transform_video_delete_request(
         self,
@@ -328,7 +373,16 @@ class OpenAIVideoConfig(BaseVideoConfig):
         Transform the OpenAI video delete response.
         """
         response_data = raw_response.json()
-        
+
+        # Check if response is an error
+        error_message = self._extract_error_message(response_data)
+        if error_message is not None:
+            raise self.get_error_class(
+                error_message=error_message,
+                status_code=raw_response.status_code,
+                headers=raw_response.headers,
+            )
+
         # Transform the response data
         video_obj = VideoObject(**response_data)  # type: ignore[arg-type]  # type: ignore[arg-type]
 
@@ -363,10 +417,47 @@ class OpenAIVideoConfig(BaseVideoConfig):
         Transform the OpenAI video retrieve response.
         """
         response_data = raw_response.json()
+
+        # Check if response is an error
+        error_message = self._extract_error_message(response_data)
+        if error_message is not None:
+            raise self.get_error_class(
+                error_message=error_message,
+                status_code=raw_response.status_code,
+                headers=raw_response.headers,
+            )
+
         # Transform the response data
         video_obj = VideoObject(**response_data)  # type: ignore[arg-type]
 
         return video_obj
+
+    def _extract_error_message(self, response_data: dict) -> Optional[str]:
+        """
+        Extract error message from response data.
+        Handles various error response formats from Azure/OpenAI.
+
+        Returns None if no error is found.
+        """
+        if "error" not in response_data:
+            return None
+
+        error = response_data["error"]
+
+        # Handle case where error is None - this is NOT an error, it's a successful response
+        if error is None:
+            return None
+
+        # Handle case where error is a string
+        if isinstance(error, str):
+            return error
+
+        # Handle case where error is a dictionary
+        if isinstance(error, dict):
+            return error.get("message", str(response_data))
+
+        # Fallback for unknown error format
+        return str(response_data)
 
     def get_error_class(
         self, error_message: str, status_code: int, headers: Union[dict, httpx.Headers]

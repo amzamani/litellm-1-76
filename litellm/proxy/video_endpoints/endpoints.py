@@ -431,6 +431,11 @@ async def video_remix(
     data = orjson.loads(body)
     data["video_id"] = video_id
 
+    # Extract model from query params if not in body
+    query_params = dict(request.query_params)
+    if "model" not in data and "model" in query_params:
+        data["model"] = query_params["model"]
+
     # Process request using ProxyBaseLLMRequestProcessing
     processor = ProxyBaseLLMRequestProcessing(data=data)
     try:
@@ -444,7 +449,7 @@ async def video_remix(
             general_settings=general_settings,
             proxy_config=proxy_config,
             select_data_generator=select_data_generator,
-            model=None,
+            model=data.get("model"),
             user_model=user_model,
             user_temperature=user_temperature,
             user_request_timeout=user_request_timeout,

@@ -345,7 +345,13 @@ def video_content(
         _is_async = kwargs.pop("async_call", False) is True
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        # Include explicit parameters in litellm_params (same as video_generation)
+        litellm_params = GenericLiteLLMParams(
+            api_key=api_key,
+            api_base=api_base,
+            api_version=api_version,
+            **kwargs
+        )
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or "sora-2",  # Default model for video content
             custom_llm_provider=custom_llm_provider,
@@ -640,7 +646,13 @@ def video_remix(  # noqa: PLR0915
             return response
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        # Include explicit parameters in litellm_params (same as video_generation)
+        litellm_params = GenericLiteLLMParams(
+            api_key=api_key,
+            api_base=api_base,
+            api_version=api_version,
+            **kwargs
+        )
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
@@ -1124,7 +1136,13 @@ def video_status(  # noqa: PLR0915
             return response
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        # Include explicit parameters in litellm_params (same as video_generation)
+        litellm_params = GenericLiteLLMParams(
+            api_key=api_key,
+            api_base=api_base,
+            api_version=api_version,
+            **kwargs
+        )
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
